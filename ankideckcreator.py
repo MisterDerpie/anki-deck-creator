@@ -1,5 +1,5 @@
 #!/bin/python3
-from genanki import Model, Deck, Note, Package
+from genanki import Model, Deck, Note, Package, guid_for
 import json
 import sys
 
@@ -16,6 +16,13 @@ language_from = input_json["from"]
 language_to = input_json["to"]
 deck_name = input_json["name"]
 words = input_json["words"]
+
+deck_hash = hash(deck_name) % MAX_SIGNED_INT
+
+class NoteWithCustomHash(Note):
+  @property
+  def guid(self):
+    return guid_for(self.fields[0] + str(deck_hash) , self.fields[1] + str(deck_hash))
 
 anki_model = Model(
     20230212,
@@ -37,13 +44,13 @@ anki_model = Model(
 )
 
 anki_deck = Deck(
-    hash(deck_name) % MAX_SIGNED_INT,
+    deck_hash,
     deck_name
 )
 
 def add_note(language_from: str, language_to: str, model: Model, deck: Deck) -> None:
     deck.add_note(
-        Note(
+        NoteWithCustomHash(
             model = model,
             fields = [language_from, language_to]
         )
